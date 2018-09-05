@@ -6,6 +6,8 @@
 package edu.utfpr.cp.sa.dao;
 
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,40 +29,34 @@ public class ConnectionFactory {
 	}
 	
 	public static void closeConnection(Connection con) {
-		
-			try {
-				if(con!= null) {
-				con.close();
-				}
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
+            if(con!= null) 
+                try {
+                    if(con!= null) 
+                    con.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ConnectionFactory.class.getName()).log(Level.SEVERE, null, ex);
+            }	
 	}
 
 	public static void closeConnection(Connection con , PreparedStatement stmt) {
-		closeConnection(con);
-		try {
-			if(stmt!= null) {
-			stmt.close();
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
+            closeConnection(con);
+            try {
+   		if(stmt!= null) {
+                    stmt.close();
+                }
+            } catch (SQLException ex) {
+		Logger.getLogger(ConnectionFactory.class.getName()).log(Level.SEVERE, null, ex);
+            }
 	}
+        
 	public static void closeConnection(Connection con,PreparedStatement stmt , ResultSet rs) {
-		closeConnection(con,stmt);
-		try {
-			if(rs!= null) {
-			rs.close();
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
+            closeConnection(con,stmt);
+            try {
+		if(rs!= null) {
+		rs.close();
+            }
+            } catch (SQLException ex) {
+                Logger.getLogger(ConnectionFactory.class.getName()).log(Level.SEVERE, null, ex);
+            }
 	}
 }
