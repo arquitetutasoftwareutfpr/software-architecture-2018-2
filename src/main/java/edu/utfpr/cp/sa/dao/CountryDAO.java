@@ -60,7 +60,43 @@ public class CountryDAO {
         }
         return c;
     }   
-    
+    public void update(Country c) {
+		Connection con = ConnectionFactory.getConnection();
+		PreparedStatement stmt = null;
+                int idCountry = findByCountryName(c.getName());
+		
+		try {
+                        stmt = con.prepareStatement("UPDATE country SET nameCountry = ? , phonedigtsCountry = ? , acronymCountry = ? WHERE idCountry = ? ");
+                        stmt.setString(1, c.getName());
+                        stmt.setInt(2, c.getPhoneDigits());
+                        stmt.setString(3 , c.getAcronym());
+                        stmt.setInt(4 , idCountry);
+                        
+                        stmt.executeUpdate();
+                        
+		} catch (SQLException e) {
+			Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE,null,e);
+		}finally{
+                    ConnectionFactory.closeConnection(con, stmt);
+                }
+    }
+    public void delete(Country c) {
+		Connection con = ConnectionFactory.getConnection();
+		PreparedStatement stmt = null;
+                int idCountry = findByCountryName(c.getName());
+		
+		try {
+                        stmt = con.prepareStatement("DELETE FROM country WHERE idCountry = ? ");
+                        stmt.setInt(1 , idCountry);
+                        
+                        stmt.executeUpdate();
+                        
+		} catch (SQLException e) {
+			Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE,null,e);
+		}finally{
+                    ConnectionFactory.closeConnection(con, stmt);
+                }
+    }
     public int findByCountryName(String name){
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
