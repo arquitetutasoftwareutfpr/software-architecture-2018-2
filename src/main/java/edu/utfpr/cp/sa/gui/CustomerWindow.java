@@ -11,12 +11,14 @@ import javax.swing.table.AbstractTableModel;
 import edu.utfpr.cp.sa.entity.Country;
 import edu.utfpr.cp.sa.entity.Customer;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -84,6 +86,7 @@ public class CustomerWindow extends JFrame {
     private JTextField age;
     private JComboBox<String> country;
     private JTable table;
+    private JButton btnCreate;
 
     private Set<Customer> customers;
     private Set<Country> countries;
@@ -91,7 +94,7 @@ public class CustomerWindow extends JFrame {
     private final CountryDAO DAO_COUNTRY = new CountryDAO();
     private final CustomerDAO DAO_CUSTOMER = new CustomerDAO();
 
-    private void create() {
+    private void persist() {
         Customer c = new Customer();
         Country selected = countries
                 .stream()
@@ -132,13 +135,28 @@ public class CustomerWindow extends JFrame {
         }
 
         //Inserindo no banco
-        if (DAO_CUSTOMER.create(c)) {
-            if (this.customers.add(c)) {
-                JOptionPane.showMessageDialog(this, "Customer successfully added!");
+        if (btnCreate.getText().equalsIgnoreCase("Create")) {
+            if (DAO_CUSTOMER.create(c)) {
+                if (this.customers.add(c)) {
+                    JOptionPane.showMessageDialog(this, "Customer successfully added!");
+                    this.table.setModel(new CustomerTableModel(customers));
+                    this.pack();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Sorry, customer already exists");
+                }
+            }
+        } else {
+            try {
+                c.setId(DAO_CUSTOMER.findIdCustomerByName(c.getName()));
+            } catch (Exception ex) {
+                Logger.getLogger(CustomerWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (DAO_CUSTOMER.update(c)) {
+                JOptionPane.showMessageDialog(this, "Customer successfully updated!");
+                setRowsTable();
                 this.table.setModel(new CustomerTableModel(customers));
+                btnCreate.setText("Create");
                 this.pack();
-            } else {
-                JOptionPane.showMessageDialog(this, "Sorry, customer already exists");
             }
         }
 
@@ -151,16 +169,25 @@ public class CustomerWindow extends JFrame {
             listCountries.forEach(e -> countries.add(e));
         }
     }
-    
-    private void setRowsTable(){
+
+    private void setRowsTable() {
+        customers.clear();
         List<Customer> listCustomers = new ArrayList<>();
         listCustomers = DAO_CUSTOMER.read();
-        if(!listCustomers.isEmpty()){
+        if (!listCustomers.isEmpty()) {
             listCustomers.forEach(e -> {
                 customers.add(e);
             });
             this.table.setModel(new CustomerTableModel(customers));
         }
+    }
+
+    private void setFormToUpdateCustomer(Customer c) {
+        name.setText(c.getName());
+        age.setText(String.valueOf(c.getAge()));
+        phone.setText(c.getPhone());
+        country.setSelectedItem(c.getCountry().getName());
+        btnCreate.setText("Save");
     }
 
     public CustomerWindow(Set<Customer> customers, Set<Country> countries) {
@@ -172,18 +199,31 @@ public class CustomerWindow extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-        addWindowListener(new WindowAdapter(){
+        addWindowListener(new WindowAdapter() {
             @Override
-            public void windowOpened(WindowEvent eve){
+            public void windowOpened(WindowEvent eve) {
                 setRowsTable();
             }
         });
-        
+
         JScrollPane panelTable = new JScrollPane();
         contentPane.add(panelTable, BorderLayout.CENTER);
 
         table = new JTable();
         table.setModel(new CustomerTableModel(customers));
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int countClickes = evt.getClickCount();
+                if (countClickes == 1) {
+                    try {
+                        Customer c = DAO_CUSTOMER.findCustomerByName((String) table.getValueAt(table.getSelectedRow(), 0));
+                        setFormToUpdateCustomer(c);
+                    } catch (Exception ex) {
+                        Logger.getLogger(CustomerWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
         panelTable.setViewportView(table);
 
         JPanel panelInclusion = new JPanel();
@@ -218,9 +258,9 @@ public class CustomerWindow extends JFrame {
         country = new JComboBox<>(countries.stream().map(Country::getName).toArray(String[]::new));
         panelInclusion.add(country);
 
-        JButton btnCreate = new JButton("Create");
+        btnCreate = new JButton("Create");
         panelInclusion.add(btnCreate);
-        btnCreate.addActionListener(e -> this.create());
+        btnCreate.addActionListener(e -> this.persist());
 
         JButton btnClose = new JButton("Close");
         panelInclusion.add(btnClose);

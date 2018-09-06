@@ -115,7 +115,7 @@ public class CountryDAO {
         return idCountry;
     }
     
-    public Country findIdCountryByName(int idCountry) {
+    public Country findCountryById(int idCountry) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
