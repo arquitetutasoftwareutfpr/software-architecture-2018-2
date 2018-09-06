@@ -9,12 +9,12 @@ import java.util.logging.Logger;
 
 public class CountryDAO {
 
-    public void create(Country c) {
+    public boolean create(Country c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
 
         try {
-            stmt = con.prepareStatement("INSERT INTO country (nameCountry,phonedigtsCountry,acronymCountry)VALUES(?,?,?)");
+            stmt = con.prepareStatement("INSERT INTO country (nameCountry,phonedigitsCountry,acronymCountry)VALUES(?,?,?)");
             stmt.setString(1, c.getName());
             stmt.setInt(2, c.getPhoneDigits());
             stmt.setString(3, c.getAcronym());
@@ -23,9 +23,11 @@ public class CountryDAO {
 
         } catch (SQLException e) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, e);
+            return false;
         } finally {
             ConnectionFactory.closeConnection(con, stmt);
         }
+        return true;
     }
 
     public List<Country> read() {
@@ -34,7 +36,7 @@ public class CountryDAO {
         ResultSet rs = null;
         List<Country> c = new ArrayList<>();
         try {
-            stmt = con.prepareStatement("SELCT * FROM country");
+            stmt = con.prepareStatement("SELECT * FROM country");
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -42,10 +44,9 @@ public class CountryDAO {
                 country.setName(rs.getString("nameCountry"));
                 country.setPhoneDigits(rs.getInt("phonedigitsCountry"));
                 country.setAcronym(rs.getString("acronymCountry"));
-
                 c.add(country);
-                return c;
             }
+            return c;
         } catch (SQLException ex) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -57,7 +58,7 @@ public class CountryDAO {
     public void update(Country c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
-        int idCountry = findByCountryName(c.getName());
+        int idCountry = findIdCountryByName(c.getName());
 
         try {
             stmt = con.prepareStatement("UPDATE country SET nameCountry = ? , phonedigtsCountry = ? , acronymCountry = ? WHERE idCountry = ? ");
@@ -78,7 +79,7 @@ public class CountryDAO {
     public void delete(Country c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
-        int idCountry = findByCountryName(c.getName());
+        int idCountry = findIdCountryByName(c.getName());
 
         try {
             stmt = con.prepareStatement("DELETE FROM country WHERE idCountry = ? ");
@@ -93,17 +94,18 @@ public class CountryDAO {
         }
     }
 
-    public int findByCountryName(String name) {
+    public int findIdCountryByName(String name) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         int idCountry = 0;
         try {
-            stmt = con.prepareStatement("SELCT idCountry FROM country WHERE nameCountry = ?");
+            stmt = con.prepareStatement("SELECT idCountry FROM country WHERE nameCountry = ?");
             stmt.setString(1, name);
             rs = stmt.executeQuery();
-            idCountry = rs.getInt("idCountry");
-
+            while (rs.next()) {
+                idCountry = rs.getInt("idCountry");
+            }
         } catch (SQLException ex) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, ex);
         } finally {

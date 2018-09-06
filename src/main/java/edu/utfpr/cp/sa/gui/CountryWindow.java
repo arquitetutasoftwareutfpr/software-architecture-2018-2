@@ -1,5 +1,6 @@
 package edu.utfpr.cp.sa.gui;
 
+import edu.utfpr.cp.sa.dao.CountryDAO;
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -8,7 +9,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 import edu.utfpr.cp.sa.entity.Country;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -70,6 +74,7 @@ public class CountryWindow extends JFrame {
     private JTextField phoneDigits;
     private JTable table;
     private Set<Country> countries;
+    private final CountryDAO DAO = new CountryDAO();
 
     private void create() {
         Country c = new Country();
@@ -77,16 +82,31 @@ public class CountryWindow extends JFrame {
         c.setAcronym(acronym.getText());
         c.setPhoneDigits(new Integer(phoneDigits.getText()));
 
-        if (this.countries.add(c)) {
-            JOptionPane.showMessageDialog(this, "Country successfully added!");
-            this.table.setModel(new CountryTableModel(countries));
+        //Inserindo no banco
+        if (DAO.create(c)) {
+            c.setId(DAO.findIdCountryByName(c.getName()));
+            if (this.countries.add(c)) {
+                JOptionPane.showMessageDialog(this, "Country successfully added!");
+                this.table.setModel(new CountryTableModel(countries));
 
-        } else {
-            JOptionPane.showMessageDialog(this, "Sorry, country already exists");
+            } else {
+                JOptionPane.showMessageDialog(this, "Sorry, country already exists");
+            }
         }
-
     }
 
+    private void setRowsTable(){
+        List<Country> listCountries = new ArrayList<>();
+        listCountries = DAO.read();
+        if(!listCountries.isEmpty()){
+            listCountries.forEach(e -> {
+                System.out.println(e);
+                countries.add(e);
+            });
+            this.table.setModel(new CountryTableModel(countries));
+        }
+    }
+    
     public CountryWindow(Set<Country> countries) {
         this.countries = countries;
 
@@ -95,7 +115,13 @@ public class CountryWindow extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-
+        addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowOpened(WindowEvent eve){
+                setRowsTable();
+            }
+        });
+        
         JScrollPane panelTable = new JScrollPane();
         contentPane.add(panelTable, BorderLayout.CENTER);
 
