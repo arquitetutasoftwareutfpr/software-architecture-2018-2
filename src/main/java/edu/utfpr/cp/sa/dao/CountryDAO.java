@@ -36,11 +36,12 @@ public class CountryDAO {
         ResultSet rs = null;
         List<Country> c = new ArrayList<>();
         try {
-            stmt = con.prepareStatement("SELECT * FROM country");
+            stmt = con.prepareStatement("SELECT * FROM country ORDER BY nameCountry ASC");
             rs = stmt.executeQuery();
 
             while (rs.next()) {
                 Country country = new Country();
+                country.setId(rs.getInt("idCountry"));
                 country.setName(rs.getString("nameCountry"));
                 country.setPhoneDigits(rs.getInt("phonedigitsCountry"));
                 country.setAcronym(rs.getString("acronymCountry"));
@@ -112,5 +113,29 @@ public class CountryDAO {
             ConnectionFactory.closeConnection(con, stmt, rs);
         }
         return idCountry;
+    }
+    
+    public Country findIdCountryByName(int idCountry) {
+        Connection con = ConnectionFactory.getConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = con.prepareStatement("SELECT * FROM country WHERE idCountry = ?");
+            stmt.setInt(1, idCountry);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Country c = new Country();
+                c.setId(rs.getInt("idCountry"));
+                c.setName(rs.getString("nameCountry"));
+                c.setPhoneDigits(rs.getInt("phonedigitsCountry"));
+                c.setAcronym(rs.getString("acronymCountry"));
+                return c;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            ConnectionFactory.closeConnection(con, stmt, rs);
+        }
+        return null;
     }
 }

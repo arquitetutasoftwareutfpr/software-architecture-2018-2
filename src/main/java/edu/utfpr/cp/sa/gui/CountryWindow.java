@@ -100,7 +100,6 @@ public class CountryWindow extends JFrame {
         listCountries = DAO.read();
         if(!listCountries.isEmpty()){
             listCountries.forEach(e -> {
-                System.out.println(e);
                 countries.add(e);
             });
             this.table.setModel(new CountryTableModel(countries));

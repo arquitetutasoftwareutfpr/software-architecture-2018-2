@@ -1,5 +1,7 @@
 package edu.utfpr.cp.sa.gui;
 
+import edu.utfpr.cp.sa.dao.CountryDAO;
+import edu.utfpr.cp.sa.dao.CustomerDAO;
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -9,7 +11,11 @@ import javax.swing.table.AbstractTableModel;
 import edu.utfpr.cp.sa.entity.Country;
 import edu.utfpr.cp.sa.entity.Customer;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -82,6 +88,9 @@ public class CustomerWindow extends JFrame {
     private Set<Customer> customers;
     private Set<Country> countries;
 
+    private final CountryDAO DAO_COUNTRY = new CountryDAO();
+    private final CustomerDAO DAO_CUSTOMER = new CustomerDAO();
+
     private void create() {
         Customer c = new Customer();
         Country selected = countries
@@ -122,15 +131,36 @@ public class CustomerWindow extends JFrame {
 
         }
 
-        if (this.customers.add(c)) {
-            JOptionPane.showMessageDialog(this, "Customer successfully added!");
-            this.table.setModel(new CustomerTableModel(customers));
-            this.pack();
-
-        } else {
-            JOptionPane.showMessageDialog(this, "Sorry, customer already exists");
+        //Inserindo no banco
+        if (DAO_CUSTOMER.create(c)) {
+            if (this.customers.add(c)) {
+                JOptionPane.showMessageDialog(this, "Customer successfully added!");
+                this.table.setModel(new CustomerTableModel(customers));
+                this.pack();
+            } else {
+                JOptionPane.showMessageDialog(this, "Sorry, customer already exists");
+            }
         }
 
+    }
+
+    private void setCountriesFromDB() {
+        List<Country> listCountries = new ArrayList<>();
+        listCountries = DAO_COUNTRY.read();
+        if (!listCountries.isEmpty()) {
+            listCountries.forEach(e -> countries.add(e));
+        }
+    }
+    
+    private void setRowsTable(){
+        List<Customer> listCustomers = new ArrayList<>();
+        listCustomers = DAO_CUSTOMER.read();
+        if(!listCustomers.isEmpty()){
+            listCustomers.forEach(e -> {
+                customers.add(e);
+            });
+            this.table.setModel(new CustomerTableModel(customers));
+        }
     }
 
     public CustomerWindow(Set<Customer> customers, Set<Country> countries) {
@@ -142,7 +172,13 @@ public class CustomerWindow extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-
+        addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowOpened(WindowEvent eve){
+                setRowsTable();
+            }
+        });
+        
         JScrollPane panelTable = new JScrollPane();
         contentPane.add(panelTable, BorderLayout.CENTER);
 
@@ -178,6 +214,7 @@ public class CustomerWindow extends JFrame {
         JLabel lblCountry = new JLabel("Country");
         panelInclusion.add(lblCountry);
 
+        setCountriesFromDB();
         country = new JComboBox<>(countries.stream().map(Country::getName).toArray(String[]::new));
         panelInclusion.add(country);
 

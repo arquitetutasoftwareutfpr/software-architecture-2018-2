@@ -7,6 +7,13 @@ public class Country {
     private String acronym;
     private int phoneDigits;
 
+    public Country() {
+    }
+    
+    public Country(int id) {
+        this.id = id;
+    }
+    
     public int getId() {
         return id;
     }

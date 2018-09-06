@@ -1,5 +1,6 @@
 package edu.utfpr.cp.sa.dao;
 
+import edu.utfpr.cp.sa.entity.Country;
 import edu.utfpr.cp.sa.entity.Customer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,24 +13,24 @@ import java.util.logging.Logger;
 
 public class CustomerDAO {
 
-    public void create(Customer c, int idCountry) {
+    public boolean create(Customer c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = con.prepareStatement("INSERT INTO country (nameCustomer,phoneCustomer,ageCustomer,creditLimitCustomer,country_idCountry)VALUES(?,?,?,?,?)");
+            stmt = con.prepareStatement("INSERT INTO customer (nameCustomer,phoneCustomer,ageCustomer,creditLimitCustomer,country_idCountry)VALUES(?,?,?,?,?)");
             stmt.setString(1, c.getName());
             stmt.setString(2, c.getPhone());
             stmt.setInt(3, c.getAge());
             stmt.setDouble(4, c.getCreditLimit());
-            stmt.setInt(5, idCountry);
-
+            stmt.setInt(5, c.getCountry().getId());
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, e);
+            return false;
         } finally {
             ConnectionFactory.closeConnection(con, stmt);
         }
+        return true;
     }
 
     public List<Customer> read() {
@@ -37,20 +38,21 @@ public class CustomerDAO {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<Customer> c = new ArrayList<>();
+        CountryDAO DAO_COUNTRY = new CountryDAO();
         try {
             stmt = con.prepareStatement("SELECT * FROM customer");
             rs = stmt.executeQuery();
 
             while (rs.next()) {
                 Customer customer = new Customer();
+                customer.setCountry(DAO_COUNTRY.findIdCountryByName(rs.getInt("country_idCountry")));
                 customer.setName(rs.getString("nameCustomer"));
                 customer.setPhone(rs.getString("phoneCustomer"));
                 customer.setAge(rs.getInt("ageCustomer"));
                 customer.setCreditLimit(rs.getDouble("creditLimitCustomer"));
-
                 c.add(customer);
-                return c;
             }
+            return c;
         } catch (SQLException ex) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -58,45 +60,43 @@ public class CustomerDAO {
         } finally {
             ConnectionFactory.closeConnection(con, stmt, rs);
         }
-        return c;
+        return null;
     }
 
-    public void update(Customer c) {
+    public boolean update(Customer c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
-        int idCustomer = findByCustomerName(c.getName());
         try {
             stmt = con.prepareStatement("UPDATE country SET nameCustomer = ? , phoneCustomer = ? , ageCustomer = ? , creditLimitCustomer = ? WHERE idCustomer = ? ");
             stmt.setString(1, c.getName());
             stmt.setString(2, c.getPhone());
             stmt.setInt(3, c.getAge());
             stmt.setDouble(4, c.getCreditLimit());
-            stmt.setInt(5, idCustomer);
-
+            stmt.setInt(5, c.getId());
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, e);
+            return false;
         } finally {
             ConnectionFactory.closeConnection(con, stmt);
         }
+        return true;
     }
 
-    public void delete(Customer c) {
+    public boolean delete(Customer c) {
         Connection con = ConnectionFactory.getConnection();
         PreparedStatement stmt = null;
-        int idCustomer = findByCustomerName(c.getName());
         try {
             stmt = con.prepareStatement("DELETE FROM customer WHERE idCustomer = ? ");
-            stmt.setInt(1, idCustomer);
-
+            stmt.setInt(1, c.getId());
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             Logger.getLogger(CountryDAO.class.getName()).log(Level.SEVERE, null, e);
+            return false;
         } finally {
             ConnectionFactory.closeConnection(con, stmt);
         }
+        return true;
     }
 
     public int findByCustomerName(String name) {
