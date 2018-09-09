@@ -28,3 +28,8 @@ java -jar target/app2-1.0-SNAPSHOT.jar
 This branch just adds the class architectural description to App02 maven project. The architectural description was created by using IntelliJ IDEA automatic diagram generator. 
 
 To see the description, just go to src/main/resources
+
+#### Students
+Camila Lima Martins (RA: 1884786),
+Vanderley Sousa da Silva Junior (RA: 1885022),
+Matheus Alves Soares (RA: 1884948)
